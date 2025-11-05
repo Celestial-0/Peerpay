@@ -1,9 +1,7 @@
-<link rel="stylesheet" href="styles.css">
 
 # 👤 User Module
 
 **Version:** 0.0.1  
-**Status:** <span class="badge badge-status">Production Ready</span>
 
 ---
 
@@ -108,13 +106,11 @@ export class User {
 
 ### 1. Get Current User Profile
 
-<div class="endpoint-card">
 
 **GET** `/user/profile`
 
 Retrieve the authenticated user's profile.
 
-</div>
 
 **Headers:**
 
@@ -153,13 +149,11 @@ Authorization: Bearer <access_token>
 
 ### 2. Update User Profile
 
-<div class="endpoint-card">
 
 **PATCH** `/user/profile`
 
 Update user profile information.
 
-</div>
 
 **Headers:**
 
@@ -207,13 +201,11 @@ Authorization: Bearer <access_token>
 
 ### 3. Delete User Account
 
-<div class="endpoint-card">
 
 **DELETE** `/user/profile`
 
 Permanently delete user account and all associated data.
 
-</div>
 
 **Headers:**
 
@@ -248,13 +240,11 @@ Authorization: Bearer <access_token>
 
 ### 4. Search Users
 
-<div class="endpoint-card">
 
 **GET** `/user/search`
 
 Search for users by name or email with optional online status filter.
 
-</div>
 
 **Headers:**
 
@@ -316,13 +306,11 @@ GET /user/search?query=john&onlineOnly=true&limit=10
 
 ### 5. Update Ledger Balances
 
-<div class="endpoint-card">
 
 **PATCH** `/user/ledger`
 
 Update user's ledger balances (internal use).
 
-</div>
 
 **Headers:**
 

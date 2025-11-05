@@ -80,95 +80,44 @@ Peerpay Ledger is a modern financial tracking application that enables users to:
 
 ---
 
-## 📖 Module Documentation
+## 📖 Complete Documentation
 
-### Core Modules
+For detailed module documentation, API references, and guides, visit our comprehensive documentation site:
 
-<nav>
+### 🌐 [**View Full Documentation**](https://celestial-0.github.io/Peerpay/)
 
-#### 🔐 [Authentication Module](./auth.md)
+**Quick Links:**
+- [Backend Overview](https://celestial-0.github.io/Peerpay/backend/overview)
+- [Authentication Module](https://celestial-0.github.io/Peerpay/backend/auth)
+- [User Module](https://celestial-0.github.io/Peerpay/backend/user)
+- [Friend Module](https://celestial-0.github.io/Peerpay/backend/friend)
+- [Transaction Module](https://celestial-0.github.io/Peerpay/backend/transaction)
+- [Notification Module](https://celestial-0.github.io/Peerpay/backend/notification)
+- [Realtime Module](https://celestial-0.github.io/Peerpay/backend/realtime)
+- [Common Utilities](https://celestial-0.github.io/Peerpay/backend/common)
+
+### 📚 Module Overview
+
+#### 🔐 Authentication Module
 JWT-based authentication with access and refresh tokens, token versioning, and forced logout capabilities.
 
-**Key Features:**
-- User registration and login
-- Token refresh mechanism
-- Password hashing with bcrypt
-- Global JWT guard
-- Public route decorator
-
----
-
-#### 👤 [User Module](./user.md)
+#### 👤 User Module
 User profile management, ledger balance tracking, and user search functionality.
 
-**Key Features:**
-- Profile CRUD operations
-- Ledger balance tracking (totalLent, totalBorrowed, netBalance)
-- User search with online status
-- Password security
-- Account deletion
-
----
-
-#### 👥 [Friend Module](./friend.md)
+#### 👥 Friend Module
 Complete friend request system with bidirectional friendship tracking and real-time notifications.
 
-**Key Features:**
-- Send/accept/reject friend requests
-- Cancel pending requests
-- Remove friends
-- View friends list
-- Real-time friend events
-
----
-
-#### 💰 [Transaction Module](./transaction.md)
+#### 💰 Transaction Module
 Peer-to-peer transaction management with atomic operations and automatic balance updates.
 
-**Key Features:**
-- Create LENT/BORROWED transactions
-- Transaction status management
-- Automatic balance synchronization
-- Transaction history with filters
-- Balance rollback on deletion
-
----
-
-#### 🔔 [Notification Module](./notification.md)
+#### 🔔 Notification Module
 Comprehensive notification system with real-time delivery and read/unread tracking.
 
-**Key Features:**
-- Multiple notification types
-- Real-time WebSocket delivery
-- Read/unread status tracking
-- Bulk operations
-- Pagination support
-
----
-
-#### 🔌 [Realtime Module](./realtime.md)
+#### 🔌 Realtime Module
 WebSocket-based real-time communication with JWT authentication and multi-device support.
 
-**Key Features:**
-- JWT-authenticated WebSocket connections
-- Multi-device support
-- Online/offline status tracking
-- Friend, transaction, and notification events
-- Connection management
-
----
-
-#### 🛠️ [Common Module](./common.md)
+#### 🛠️ Common Module
 Shared utilities, constants, type helpers, and global configurations.
-
-**Key Features:**
-- MongoDB query helpers
-- ObjectId utilities
-- Global guards and decorators
-- Constants management
-- Validation utilities
-
-</nav>
 
 ---
 

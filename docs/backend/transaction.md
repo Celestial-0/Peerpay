@@ -1,9 +1,7 @@
-<link rel="stylesheet" href="styles.css">
 
 # 💰 Transaction Module
 
 **Version:** 0.0.1  
-**Status:** <span class="badge badge-status">Production Ready</span>
 
 ---
 
@@ -91,13 +89,11 @@ export enum TransactionStatus {
 
 ### 1. Create Transaction
 
-<div class="endpoint-card">
 
 **POST** `/transactions`
 
 Create a new transaction in PENDING state. Balances are NOT updated until the receiver accepts.
 
-</div>
 
 **Request Body:**
 
@@ -141,13 +137,11 @@ Create a new transaction in PENDING state. Balances are NOT updated until the re
 
 ### 2. Get All Transactions
 
-<div class="endpoint-card">
 
 **GET** `/transactions`
 
 Get all transactions with summary.
 
-</div>
 
 **Query Parameters:**
 
@@ -195,13 +189,11 @@ Get all transactions with summary.
 
 ### 3. Get Transactions with Specific User
 
-<div class="endpoint-card">
 
 **GET** `/transactions/with/:userId`
 
 Get all transactions with a specific user.
 
-</div>
 
 **Response:** `200 OK`
 
@@ -234,13 +226,11 @@ Get all transactions with a specific user.
 
 ### 4. Update Transaction Status
 
-<div class="endpoint-card">
 
 **PATCH** `/transactions/:id/status`
 
 Update transaction status.
 
-</div>
 
 **Request Body:**
 
@@ -264,13 +254,11 @@ Update transaction status.
 
 ### 5. Delete Transaction
 
-<div class="endpoint-card">
 
 **DELETE** `/transactions/:id`
 
 Delete a pending transaction. Only the sender can delete, and only if status is PENDING.
 
-</div>
 
 **Response:** `204 No Content`
 
@@ -283,13 +271,11 @@ Delete a pending transaction. Only the sender can delete, and only if status is 
 
 ### 6. Accept Transaction
 
-<div class="endpoint-card">
 
 **PATCH** `/transactions/:id/accept`
 
 Accept a pending transaction. Updates balances based on transaction type.
 
-</div>
 
 **Response:** `200 OK`
 
@@ -325,13 +311,11 @@ For **BORROWED** transaction (sender borrowed from receiver):
 
 ### 7. Reject Transaction
 
-<div class="endpoint-card">
 
 **PATCH** `/transactions/:id/reject`
 
 Reject a pending transaction.
 
-</div>
 
 **Response:** `204 No Content`
 
@@ -344,13 +328,11 @@ Reject a pending transaction.
 
 ### 8. Settle with Friend
 
-<div class="endpoint-card">
 
 **POST** `/transactions/settle/:friendId`
 
 Create a settlement transaction to clear outstanding balance with a friend.
 
-</div>
 
 **Request Body:**
 
@@ -399,13 +381,11 @@ The system automatically determines the correct transaction type based on who ow
 
 ### 9. Get Pending Transactions
 
-<div class="endpoint-card">
 
 **GET** `/transactions/pending`
 
 Get all pending transactions where the current user is the receiver.
 
-</div>
 
 **Response:** `200 OK`
 

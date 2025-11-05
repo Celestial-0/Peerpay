@@ -1,9 +1,7 @@
-<link rel="stylesheet" href="styles.css">
 
 # 🔐 Authentication Module
 
 **Version:** 0.0.1  
-**Status:** <span class="badge badge-status">Production Ready</span>
 
 ---
 
@@ -65,13 +63,11 @@ import { UserModule } from '../user/user.module';
 
 ### 1. User Registration
 
-<div class="endpoint-card">
 
 **POST** `/auth/signup`
 
 Register a new user account.
 
-</div>
 
 **Request Body:**
 
@@ -118,13 +114,11 @@ Register a new user account.
 
 ### 2. User Login
 
-<div class="endpoint-card">
 
 **POST** `/auth/signin`
 
 Authenticate user and receive tokens.
 
-</div>
 
 **Request Body:**
 
@@ -159,13 +153,11 @@ Authenticate user and receive tokens.
 
 ### 3. Refresh Access Token
 
-<div class="endpoint-card">
 
 **POST** `/auth/refresh`
 
 Obtain a new access token using refresh token.
 
-</div>
 
 **Request Body:**
 
@@ -195,13 +187,11 @@ Obtain a new access token using refresh token.
 
 ### 4. Sign Out
 
-<div class="endpoint-card">
 
 **POST** `/auth/signout`
 
 Sign out from current device.
 
-</div>
 
 **Headers:**
 
@@ -227,13 +217,11 @@ Authorization: Bearer <access_token>
 
 ### 5. Invalidate All Tokens
 
-<div class="endpoint-card">
 
 **POST** `/auth/invalidate-tokens`
 
 Force logout from all devices.
 
-</div>
 
 **Headers:**
 

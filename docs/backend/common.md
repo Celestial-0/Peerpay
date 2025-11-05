@@ -1,9 +1,7 @@
-<link rel="stylesheet" href="styles.css">
 
 # 🛠️ Common Module & Utilities
 
 **Version:** 0.0.1  
-**Status:** <span class="badge badge-status">Production Ready</span>
 
 ---
 
@@ -45,7 +43,7 @@ src/
 
 Located in `src/common/types/mongo-query.types.ts`
 
-### MongoQuery<T>
+### MongoQuery\<T\>
 
 Type helper for TypeORM MongoDB queries with MongoDB-specific operators:
 
@@ -57,7 +55,7 @@ export type MongoQuery<T> = FindOptionsWhere<T> & {
 };
 ```
 
-### createOrQuery<T>()
+### createOrQuery\<T\>()
 
 Safe MongoDB `$or` query builder:
 
@@ -83,7 +81,7 @@ export function createOrQuery<T>(conditions: Partial<T>[]): MongoQuery<T> {
 
 ---
 
-### createObjectIdQuery<T>()
+### createObjectIdQuery\<T\>()
 
 Safe ObjectId query builder with validation. Throws `BadRequestException` if ID format is invalid:
 
@@ -115,7 +113,7 @@ export function createObjectIdQuery<T>(
 
 ---
 
-### createInQuery<T>()
+### createInQuery\<T\>()
 
 Safe MongoDB `$in` query builder for multiple ObjectIds:
 

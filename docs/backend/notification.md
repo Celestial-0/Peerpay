@@ -1,9 +1,7 @@
-<link rel="stylesheet" href="styles.css">
 
 # 🔔 Notification Module
 
 **Version:** 0.0.1  
-**Status:** <span class="badge badge-status">Production Ready</span>
 
 ---
 
@@ -74,13 +72,11 @@ export class Notification {
 
 ### 1. Get All Notifications
 
-<div class="endpoint-card">
 
 **GET** `/notifications`
 
 Get all notifications with filters.
 
-</div>
 
 **Query Parameters:**
 
@@ -120,13 +116,11 @@ Get all notifications with filters.
 
 ### 2. Get Unread Count
 
-<div class="endpoint-card">
 
 **GET** `/notifications/unread/count`
 
 Get count of unread notifications.
 
-</div>
 
 **Response:** `200 OK`
 
@@ -140,13 +134,11 @@ Get count of unread notifications.
 
 ### 3. Mark as Read
 
-<div class="endpoint-card">
 
 **PATCH** `/notifications/:id/read`
 
 Mark a notification as read.
 
-</div>
 
 **Response:** `200 OK`
 
@@ -162,13 +154,11 @@ Mark a notification as read.
 
 ### 4. Mark All as Read
 
-<div class="endpoint-card">
 
 **PATCH** `/notifications/read-all`
 
 Mark all notifications as read.
 
-</div>
 
 **Response:** `200 OK`
 
@@ -183,13 +173,11 @@ Mark all notifications as read.
 
 ### 5. Delete Notification
 
-<div class="endpoint-card">
 
 **DELETE** `/notifications/:id`
 
 Delete a specific notification.
 
-</div>
 
 **Response:** `200 OK`
 
@@ -203,13 +191,11 @@ Delete a specific notification.
 
 ### 6. Delete All Notifications
 
-<div class="endpoint-card">
 
 **DELETE** `/notifications`
 
 Delete all notifications for current user.
 
-</div>
 
 **Response:** `200 OK`
 

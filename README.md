@@ -100,7 +100,7 @@ A robust, scalable backend service that provides:
 ### Admin Dashboard
 | Technology | Purpose |
 |------------|---------|
-| **Next.js 14** | React framework with SSR |
+| **Next.js 16** | React framework with SSR |
 | **TypeScript** | Type-safe JavaScript |
 | **TailwindCSS** | Utility-first CSS framework |
 | **shadcn/ui** | UI component library |
@@ -439,7 +439,7 @@ const socket = io('http://localhost:3000/ws', {
 - `transaction.updated` - Transaction updated
 - `notification.new` - New notification
 
-**📖 Full API Documentation:** [Backend README](./backend/README.md)
+**📖 Full Documentation:** [View Complete Docs](https://celestial-0.github.io/Peerpay/)
 
 ---
 
@@ -689,7 +689,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### Getting Help
 
-- **Documentation:** [Backend Docs](./backend/README.md) | [API Docs](./backend/docs/)
+- **Documentation:** [Complete Documentation](https://celestial-0.github.io/Peerpay/)
 - **Bug Reports:** [GitHub Issues](https://github.com/Celestial-0/Peerpay/issues)
 - **Feature Requests:** [GitHub Discussions](https://github.com/Celestial-0/Peerpay/discussions)
 - **Security Issues:** Email yashkumarsingh@ieee.com
@@ -713,7 +713,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Built with ❤️ using React Native, Next.js, NestJS, and MongoDB**
 
-[⭐ Star on GitHub](https://github.com/Celestial-0/Peerpay) | [📖 Documentation](./backend/README.md) | [🐛 Report Bug](https://github.com/Celestial-0/Peerpay/issues) | [💡 Request Feature](https://github.com/Celestial-0/Peerpay/discussions)
+[⭐ Star on GitHub](https://github.com/Celestial-0/Peerpay) | [📖 Documentation](https://celestial-0.github.io/Peerpay/) | [🐛 Report Bug](https://github.com/Celestial-0/Peerpay/issues) | [💡 Request Feature](https://github.com/Celestial-0/Peerpay/discussions)
 
 ---
 

@@ -1,9 +1,7 @@
-<link rel="stylesheet" href="styles.css">
 
 # 👥 Friend Module
 
 **Version:** 0.0.1  
-**Status:** <span class="badge badge-status">Production Ready</span>
 
 ---
 
@@ -96,13 +94,11 @@ export class Friendship {
 
 ### 1. Send Friend Request
 
-<div class="endpoint-card">
 
 **POST** `/friend/request`
 
 Send a friend request to another user.
 
-</div>
 
 **Headers:**
 
@@ -161,13 +157,11 @@ socket.to(recipientId).emit('friend.requested', {
 
 ### 2. Handle Friend Request
 
-<div class="endpoint-card">
 
 **POST** `/friend/request/:id/handle`
 
 Accept or reject a friend request.
 
-</div>
 
 **Headers:**
 
@@ -252,13 +246,11 @@ socket.to(requesterId).emit('friend.rejected', {
 
 ### 3. Cancel Friend Request
 
-<div class="endpoint-card">
 
 **DELETE** `/friend/request/:id`
 
 Cancel a pending friend request you sent.
 
-</div>
 
 **Headers:**
 
@@ -303,13 +295,11 @@ socket.to(recipientId).emit('friend.requestCancelled', {
 
 ### 4. Get Friends List
 
-<div class="endpoint-card">
 
 **GET** `/friend/list`
 
 Get all friends of the current user.
 
-</div>
 
 **Headers:**
 
@@ -363,13 +353,11 @@ GET /friend/list?onlineOnly=true&limit=20
 
 ### 5. Get Incoming Friend Requests
 
-<div class="endpoint-card">
 
 **GET** `/friend/requests/incoming`
 
 Get all pending friend requests received.
 
-</div>
 
 **Headers:**
 
@@ -402,13 +390,11 @@ Authorization: Bearer <access_token>
 
 ### 6. Get Outgoing Friend Requests
 
-<div class="endpoint-card">
 
 **GET** `/friend/requests/outgoing`
 
 Get all pending friend requests sent.
 
-</div>
 
 **Headers:**
 
@@ -441,13 +427,11 @@ Authorization: Bearer <access_token>
 
 ### 7. Remove Friend
 
-<div class="endpoint-card">
 
 **DELETE** `/friend/:friendId`
 
 Remove a friend (unfriend).
 
-</div>
 
 **Headers:**
 

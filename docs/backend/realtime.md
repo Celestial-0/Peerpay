@@ -1,9 +1,7 @@
-<link rel="stylesheet" href="styles.css">
 
 # 🔌 Realtime Module (WebSocket)
 
 **Version:** 0.0.1  
-**Status:** <span class="badge badge-status">Production Ready</span>
 
 ---
 
