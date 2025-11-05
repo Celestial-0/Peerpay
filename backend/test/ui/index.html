@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peerpay Ledger</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            bg: '#0a0a0a',
+                            card: '#141414',
+                            border: '#262626',
+                            hover: '#1a1a1a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .hidden { display: none; }
+        body { 
+            background-color: #0a0a0a;
+            color: #e5e5e5;
+        }
+        
+        /* Animations */
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .animate-slide-up {
+            animation: slideInUp 0.5s ease-out;
+        }
+        
+        .animate-slide-down {
+            animation: slideInDown 0.5s ease-out;
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        .animate-shake {
+            animation: shake 0.5s ease-out;
+        }
+        
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            min-width: 300px;
+            max-width: 500px;
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            animation: slideInDown 0.3s ease-out;
+            backdrop-filter: blur(10px);
+        }
+        
+        .toast.success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border: 1px solid #34d399;
+        }
+        
+        .toast.error {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            border: 1px solid #f87171;
+        }
+        
+        .toast.info {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border: 1px solid #60a5fa;
+        }
+        
+        .toast.warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border: 1px solid #fbbf24;
+        }
+        
+        /* Loading Spinner */
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        
+        /* Input Error State */
+        .input-error {
+            border-color: #ef4444 !important;
+            animation: shake 0.5s ease-out;
+        }
+        
+        .error-message {
+            color: #ef4444;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        /* Card Hover Effect */
+        .auth-card {
+            transition: all 0.3s ease;
+        }
+        
+        .auth-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.1);
+        }
+        
+        /* Button Loading State */
+        .btn-loading {
+            position: relative;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body class="bg-dark-bg text-gray-100 min-h-screen">
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
+    
+    <!-- Modal Container -->
+    <div id="modalContainer" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in"></div>
+    
+    <div id="authPage" class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-md space-y-6">
+            <div class="text-center mb-8 animate-slide-down">
+                <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">Peerpay Ledger</h1>
+                <p class="text-gray-400 mt-2">Manage your peer transactions</p>
+            </div>
+            
+            <!-- Auth Mode Toggle -->
+            <div class="flex bg-dark-card border border-dark-border rounded-xl p-1 animate-slide-up">
+                <button id="signupTab" onclick="switchAuthMode('signup')" 
+                    class="flex-1 py-2 px-4 rounded-lg font-medium transition-all duration-300 bg-blue-600 text-white">
+                    Sign Up
+                </button>
+                <button id="signinTab" onclick="switchAuthMode('signin')" 
+                    class="flex-1 py-2 px-4 rounded-lg font-medium transition-all duration-300 text-gray-400 hover:text-gray-200">
+                    Sign In
+                </button>
+            </div>
+            
+            <!-- Sign Up Form -->
+            <div id="signupForm" class="bg-dark-card border border-dark-border rounded-xl p-6 space-y-4 auth-card animate-slide-up">
+                <h3 class="text-xl font-semibold mb-4">Create Account</h3>
+                
+                <div>
+                    <input type="email" id="signupEmail" placeholder="Email" 
+                        class="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-3 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                    <div id="signupEmailError" class="error-message hidden"></div>
+                </div>
+                
+                <div>
+                    <div class="relative">
+                        <input type="password" id="signupPassword" placeholder="Password" 
+                            class="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-3 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition pr-12">
+                        <button type="button" onclick="togglePasswordVisibility('signupPassword')" 
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 transition">
+                            <svg id="signupPasswordIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="signupPasswordError" class="error-message hidden"></div>
+                </div>
+                
+                <div>
+                    <input type="text" id="signupName" placeholder="Name" 
+                        class="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-3 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                    <div id="signupNameError" class="error-message hidden"></div>
+                </div>
+                
+                <div>
+                    <input type="text" id="signupPhone" placeholder="Phone (Optional)" 
+                        class="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-3 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                    <div id="signupPhoneError" class="error-message hidden"></div>
+                </div>
+                
+                <button id="signupBtn" onclick="signup()" 
+                    class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-3 rounded-lg transition duration-200 flex items-center justify-center gap-2">
+                    <span id="signupBtnText">Sign Up</span>
+                    <div id="signupBtnSpinner" class="spinner animate-spin hidden"></div>
+                </button>
+            </div>
+            
+            <!-- Sign In Form -->
+            <div id="signinForm" class="bg-dark-card border border-dark-border rounded-xl p-6 space-y-4 auth-card hidden">
+                <h3 class="text-xl font-semibold mb-4">Welcome Back</h3>
+                
+                <div>
+                    <input type="email" id="signinEmail" placeholder="Email" 
+                        class="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-3 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                    <div id="signinEmailError" class="error-message hidden"></div>
+                </div>
+                
+                <div>
+                    <div class="relative">
+                        <input type="password" id="signinPassword" placeholder="Password" 
+                            class="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-3 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition pr-12">
+                        <button type="button" onclick="togglePasswordVisibility('signinPassword')" 
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 transition">
+                            <svg id="signinPasswordIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="signinPasswordError" class="error-message hidden"></div>
+                </div>
+                
+                <button id="signinBtn" onclick="signin()" 
+                    class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-3 rounded-lg transition duration-200 flex items-center justify-center gap-2">
+                    <span id="signinBtnText">Sign In</span>
+                    <div id="signinBtnSpinner" class="spinner animate-spin hidden"></div>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="userPage" class="hidden min-h-screen">
+        <!-- Header -->
+        <div class="bg-dark-card border-b border-dark-border sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <div class="flex items-center justify-between">
+                    <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">Peerpay Ledger</h1>
+                    <div class="flex items-center gap-4">
+                        <div class="text-sm">
+                            <div class="text-gray-400">User: <span id="userName" class="text-gray-200 font-medium"></span></div>
+                            <div class="text-gray-400"><span id="userEmail" class="text-gray-300"></span></div>
+                        </div>
+                        <div id="wsStatus" class="px-3 py-1 rounded-full text-xs font-medium bg-red-500/10 text-red-400">
+                            WebSocket: Disconnected
+                        </div>
+                        <button onclick="signout()" 
+                            class="px-4 py-2 bg-red-600/10 hover:bg-red-600/20 text-red-400 rounded-lg transition duration-200 text-sm font-medium">
+                            Sign Out
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                <!-- My Profile -->
+                <div class="bg-dark-card border border-dark-border rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-semibold">My Profile</h2>
+                        <button onclick="loadProfile()" 
+                            class="px-3 py-1.5 bg-dark-hover hover:bg-dark-border text-gray-300 rounded-lg transition text-sm">
+                            Refresh
+                        </button>
+                    </div>
+                    <div id="profileInfo" class="space-y-2 text-sm"></div>
+                </div>
+                
+                <!-- Search & Add Friends -->
+                <div class="bg-dark-card border border-dark-border rounded-xl p-6">
+                    <h2 class="text-xl font-semibold mb-4">Search & Add Friends</h2>
+                    <div class="flex gap-2 mb-4">
+                        <input type="text" id="searchQuery" placeholder="Search by name, email, or phone" 
+                            class="flex-1 bg-dark-bg border border-dark-border rounded-lg px-4 py-2 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm">
+                        <button onclick="searchUsers()" 
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition text-sm font-medium">
+                            Search
+                        </button>
+                    </div>
+                    <div id="searchResults" class="space-y-2"></div>
+                </div>
+                
+                <!-- Friend Requests -->
+                <div class="bg-dark-card border border-dark-border rounded-xl p-6 lg:col-span-2">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-semibold">Friend Requests</h2>
+                        <div class="flex gap-2">
+                            <button onclick="loadIncomingRequests()" 
+                                class="px-3 py-1.5 bg-dark-hover hover:bg-dark-border text-gray-300 rounded-lg transition text-sm">
+                                Refresh Incoming
+                            </button>
+                            <button onclick="loadOutgoingRequests()" 
+                                class="px-3 py-1.5 bg-dark-hover hover:bg-dark-border text-gray-300 rounded-lg transition text-sm">
+                                Refresh Outgoing
+                            </button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-400 mb-3">Incoming Requests</h3>
+                            <div id="incomingRequests" class="space-y-2"></div>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-400 mb-3">Outgoing Requests</h3>
+                            <div id="outgoingRequests" class="space-y-2"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- My Friends -->
+                <div class="bg-dark-card border border-dark-border rounded-xl p-6 lg:col-span-2">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-semibold">My Friends</h2>
+                        <button onclick="loadFriends()" 
+                            class="px-3 py-1.5 bg-dark-hover hover:bg-dark-border text-gray-300 rounded-lg transition text-sm">
+                            Refresh
+                        </button>
+                    </div>
+                    <div id="friendsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+                </div>
+                
+                <!-- Pending Transactions (Require Acceptance) -->
+                <div class="bg-dark-card border border-dark-border rounded-xl p-6 lg:col-span-2">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-semibold">Pending Transactions (Require Your Acceptance)</h2>
+                        <button onclick="loadPendingTransactions()" 
+                            class="px-3 py-1.5 bg-dark-hover hover:bg-dark-border text-gray-300 rounded-lg transition text-sm">
+                            Refresh
+                        </button>
+                    </div>
+                    <div id="pendingTransactionsList" class="space-y-3"></div>
+                </div>
+                
+                <!-- Transactions -->
+                <div class="bg-dark-card border border-dark-border rounded-xl p-6 lg:col-span-2">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-semibold">Transactions</h2>
+                        <button onclick="loadTransactions()" 
+                            class="px-3 py-1.5 bg-dark-hover hover:bg-dark-border text-gray-300 rounded-lg transition text-sm">
+                            Refresh
+                        </button>
+                    </div>
+                    <div id="transactionsList" class="space-y-3"></div>
+                </div>
+                
+                <!-- Notifications -->
+                <div class="bg-dark-card border border-dark-border rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-xl font-semibold">Notifications</h2>
+                            <span id="unreadCount" class="px-2 py-0.5 bg-blue-600 text-white text-xs rounded-full font-medium">0</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="loadNotifications()" 
+                                class="px-3 py-1.5 bg-dark-hover hover:bg-dark-border text-gray-300 rounded-lg transition text-sm">
+                                Refresh
+                            </button>
+                            <button onclick="markAllAsRead()" 
+                                class="px-3 py-1.5 bg-dark-hover hover:bg-dark-border text-gray-300 rounded-lg transition text-sm">
+                                Mark All Read
+                            </button>
+                        </div>
+                    </div>
+                    <div id="notificationsList" class="space-y-2"></div>
+                </div>
+                
+                <!-- WebSocket Events -->
+                <div class="bg-dark-card border border-dark-border rounded-xl p-6">
+                    <h2 class="text-xl font-semibold mb-4">WebSocket Events</h2>
+                    <pre id="wsEvents" class="bg-dark-bg border border-dark-border rounded-lg p-4 text-xs text-gray-300 overflow-x-auto max-h-96 overflow-y-auto"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        const API_BASE = 'http://localhost:3000';
+        let token = localStorage.getItem('token') || '';
+        let refreshTokenValue = localStorage.getItem('refreshToken') || '';
+        let socket = null;
+        let currentAuthMode = 'signup';
+        
+        // Toast Notification System
+        function showToast(message, type = 'info', duration = 3000) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icon = {
+                success: '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>',
+                error: '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>',
+                warning: '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>',
+                info: '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>'
+            };
+            
+            toast.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <div class="flex-shrink-0">${icon[type]}</div>
+                    <div class="flex-1 text-white font-medium">${message}</div>
+                    <button onclick="this.parentElement.parentElement.remove()" class="flex-shrink-0 text-white/80 hover:text-white transition">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                toast.style.transition = 'all 0.3s ease-out';
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+        
+        // Form Validation
+        function validateEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+        
+        function showFieldError(fieldId, message) {
+            const field = document.getElementById(fieldId);
+            const errorDiv = document.getElementById(fieldId + 'Error');
+            field.classList.add('input-error');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+            setTimeout(() => {
+                field.classList.remove('input-error');
+            }, 500);
+        }
+        
+        function clearFieldError(fieldId) {
+            const field = document.getElementById(fieldId);
+            const errorDiv = document.getElementById(fieldId + 'Error');
+            field.classList.remove('input-error');
+            errorDiv.classList.add('hidden');
+        }
+        
+        function clearAllErrors(prefix) {
+            ['Email', 'Password', 'Name', 'Phone'].forEach(field => {
+                const fieldId = prefix + field;
+                if (document.getElementById(fieldId)) {
+                    clearFieldError(fieldId);
+                }
+            });
+        }
+        
+        function setButtonLoading(btnId, loading) {
+            const btn = document.getElementById(btnId);
+            const text = document.getElementById(btnId + 'Text');
+            const spinner = document.getElementById(btnId + 'Spinner');
+            
+            if (loading) {
+                btn.classList.add('btn-loading');
+                spinner.classList.remove('hidden');
+            } else {
+                btn.classList.remove('btn-loading');
+                spinner.classList.add('hidden');
+            }
+        }
+        
+        // Toggle Password Visibility
+        function togglePasswordVisibility(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(inputId + 'Icon');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>';
+            } else {
+                input.type = 'password';
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>';
+            }
+        }
+        
+        // Switch Auth Mode
+        function switchAuthMode(mode) {
+            currentAuthMode = mode;
+            const signupForm = document.getElementById('signupForm');
+            const signinForm = document.getElementById('signinForm');
+            const signupTab = document.getElementById('signupTab');
+            const signinTab = document.getElementById('signinTab');
+            
+            if (mode === 'signup') {
+                signupForm.classList.remove('hidden');
+                signinForm.classList.add('hidden');
+                signupTab.classList.add('bg-blue-600', 'text-white');
+                signupTab.classList.remove('text-gray-400');
+                signinTab.classList.remove('bg-blue-600', 'text-white');
+                signinTab.classList.add('text-gray-400');
+                signupForm.classList.add('animate-slide-up');
+                clearAllErrors('signup');
+            } else {
+                signinForm.classList.remove('hidden');
+                signupForm.classList.add('hidden');
+                signinTab.classList.add('bg-blue-600', 'text-white');
+                signinTab.classList.remove('text-gray-400');
+                signupTab.classList.remove('bg-blue-600', 'text-white');
+                signupTab.classList.add('text-gray-400');
+                signinForm.classList.add('animate-slide-up');
+                clearAllErrors('signin');
+            }
+        }
+        
+        // Modal System
+        function showModal(content) {
+            const container = document.getElementById('modalContainer');
+            container.innerHTML = content;
+            container.classList.remove('hidden');
+        }
+        
+        function closeModal() {
+            const container = document.getElementById('modalContainer');
+            container.classList.add('hidden');
+            container.innerHTML = '';
+        }
+        
+        function showConfirmModal(message, onConfirm, onCancel = null) {
+            const content = `
+                <div class="bg-dark-card border border-dark-border rounded-xl p-6 max-w-md w-full animate-slide-up">
+                    <h3 class="text-xl font-semibold mb-4">Confirm Action</h3>
+                    <p class="text-gray-300 mb-6">${message}</p>
+                    <div class="flex gap-3">
+                        <button onclick="closeModal(); (${onCancel ? onCancel.toString() : '() => {}'})()" 
+                            class="flex-1 px-4 py-2 bg-dark-hover hover:bg-dark-border text-gray-300 rounded-lg transition font-medium">
+                            Cancel
+                        </button>
+                        <button onclick="closeModal(); (${onConfirm.toString()})()" 
+                            class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-medium">
+                            Confirm
+                        </button>
+                    </div>
+                </div>
+            `;
+            showModal(content);
+        }
+        
+        function showInputModal(title, fields, onSubmit) {
+            const fieldsHTML = fields.map((field, idx) => `
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">${field.label}</label>
+                    <input type="${field.type || 'text'}" id="modalInput${idx}" placeholder="${field.placeholder || ''}" 
+                        class="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-2 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                </div>
+            `).join('');
+            
+            const content = `
+                <div class="bg-dark-card border border-dark-border rounded-xl p-6 max-w-md w-full animate-slide-up">
+                    <h3 class="text-xl font-semibold mb-4">${title}</h3>
+                    <div class="space-y-4 mb-6">
+                        ${fieldsHTML}
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="closeModal()" 
+                            class="flex-1 px-4 py-2 bg-dark-hover hover:bg-dark-border text-gray-300 rounded-lg transition font-medium">
+                            Cancel
+                        </button>
+                        <button onclick="handleModalSubmit(${fields.length}, ${onSubmit.toString()})" 
+                            class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-medium">
+                            Submit
+                        </button>
+                    </div>
+                </div>
+            `;
+            showModal(content);
+        }
+        
+        function handleModalSubmit(fieldCount, callback) {
+            const values = [];
+            for (let i = 0; i < fieldCount; i++) {
+                values.push(document.getElementById(`modalInput${i}`).value);
+            }
+            closeModal();
+            callback(...values);
+        }
+        
+        function showAuthPage() {
+            document.getElementById('authPage').classList.remove('hidden');
+            document.getElementById('userPage').classList.add('hidden');
+        }
+        
+        function showUserPage() {
+            document.getElementById('authPage').classList.add('hidden');
+            document.getElementById('userPage').classList.remove('hidden');
+            loadProfile();
+            connectWebSocket();
+            loadFriends();
+            loadNotifications();
+            loadPendingTransactions();
+        }
+        
+        function updateWsStatus(status) {
+            const el = document.getElementById('wsStatus');
+            el.textContent = 'WebSocket: ' + status;
+            if (status === 'Connected') {
+                el.className = 'px-3 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-400';
+            } else {
+                el.className = 'px-3 py-1 rounded-full text-xs font-medium bg-red-500/10 text-red-400';
+            }
+        }
+        
+        function logWsEvent(event, data) {
+            const eventLog = document.getElementById('wsEvents');
+            const timestamp = new Date().toLocaleTimeString();
+            eventLog.textContent = `[${timestamp}] ${event}: ${JSON.stringify(data, null, 2)}\n\n` + eventLog.textContent;
+        }
+        
+        async function apiCall(endpoint, method = 'GET', body = null) {
+            try {
+                const options = {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(token && { 'Authorization': `Bearer ${token}` })
+                    }
+                };
+                if (body) options.body = JSON.stringify(body);
+                
+                console.log(`API Call: ${method} ${endpoint}`, body);
+                
+                const response = await fetch(API_BASE + endpoint, options);
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ message: response.statusText }));
+                    console.error('API Error Response:', errorData);
+                    
+                    if (response.status === 401) {
+                        showToast('Session expired. Please login again.', 'error');
+                        signout();
+                        return null;
+                    }
+                    
+                    showToast(`Error: ${errorData.message || response.statusText}`, 'error');
+                    return null;
+                }
+                
+                const data = await response.json();
+                console.log(`API Response: ${method} ${endpoint}`, data);
+                return data;
+            } catch (error) {
+                console.error('API Error:', error);
+                showToast('Network error: ' + error.message, 'error');
+                return null;
+            }
+        }
+        
+        // Auth Functions
+        async function signup() {
+            clearAllErrors('signup');
+            
+            const email = document.getElementById('signupEmail').value.trim();
+            const password = document.getElementById('signupPassword').value;
+            const name = document.getElementById('signupName').value.trim();
+            const phoneValue = document.getElementById('signupPhone').value.trim();
+            
+            // Validation
+            let hasError = false;
+            
+            if (!email) {
+                showFieldError('signupEmail', 'Email is required');
+                hasError = true;
+            } else if (!validateEmail(email)) {
+                showFieldError('signupEmail', 'Invalid email format');
+                hasError = true;
+            }
+            
+            if (!password) {
+                showFieldError('signupPassword', 'Password is required');
+                hasError = true;
+            } else if (password.length < 6) {
+                showFieldError('signupPassword', 'Password must be at least 6 characters');
+                hasError = true;
+            }
+            
+            if (!name) {
+                showFieldError('signupName', 'Name is required');
+                hasError = true;
+            }
+            
+            if (hasError) return;
+            
+            setButtonLoading('signupBtn', true);
+            
+            const payload = { email, password, name };
+            if (phoneValue) {
+                payload.phone = phoneValue;
+            }
+            
+            const data = await apiCall('/auth/signup', 'POST', payload);
+            setButtonLoading('signupBtn', false);
+            
+            if (data && data.accessToken) {
+                token = data.accessToken;
+                refreshTokenValue = data.refreshToken;
+                localStorage.setItem('token', token);
+                localStorage.setItem('refreshToken', refreshTokenValue);
+                showToast('Account created successfully!', 'success');
+                showUserPage();
+            }
+        }
+        
+        async function signin() {
+            clearAllErrors('signin');
+            
+            const email = document.getElementById('signinEmail').value.trim();
+            const password = document.getElementById('signinPassword').value;
+            
+            // Validation
+            let hasError = false;
+            
+            if (!email) {
+                showFieldError('signinEmail', 'Email is required');
+                hasError = true;
+            } else if (!validateEmail(email)) {
+                showFieldError('signinEmail', 'Invalid email format');
+                hasError = true;
+            }
+            
+            if (!password) {
+                showFieldError('signinPassword', 'Password is required');
+                hasError = true;
+            }
+            
+            if (hasError) return;
+            
+            setButtonLoading('signinBtn', true);
+            
+            const data = await apiCall('/auth/signin', 'POST', { email, password });
+            setButtonLoading('signinBtn', false);
+            
+            if (data && data.accessToken) {
+                token = data.accessToken;
+                refreshTokenValue = data.refreshToken;
+                localStorage.setItem('token', token);
+                localStorage.setItem('refreshToken', refreshTokenValue);
+                showToast('Welcome back!', 'success');
+                showUserPage();
+            }
+        }
+        
+        async function signout() {
+            if (token) await apiCall('/auth/signout', 'POST');
+            token = '';
+            refreshTokenValue = '';
+            localStorage.removeItem('token');
+            localStorage.removeItem('refreshToken');
+            disconnectWebSocket();
+            showAuthPage();
+        }
+        
+        // User Functions
+        async function loadProfile() {
+            const data = await apiCall('/user/profile');
+            if (data) {
+                document.getElementById('userName').textContent = data.name || 'N/A';
+                document.getElementById('userEmail').textContent = data.email || 'N/A';
+                document.getElementById('profileInfo').innerHTML = `
+                    <div class="flex justify-between py-2 border-b border-dark-border">
+                        <span class="text-gray-400">Name:</span>
+                        <span class="text-gray-200 font-medium">${data.name}</span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-dark-border">
+                        <span class="text-gray-400">Email:</span>
+                        <span class="text-gray-200">${data.email}</span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-dark-border">
+                        <span class="text-gray-400">Phone:</span>
+                        <span class="text-gray-200">${data.phone || 'N/A'}</span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-dark-border">
+                        <span class="text-gray-400">Total Lent:</span>
+                        <span class="text-green-400 font-semibold">₹${data.totalLent || 0}</span>
+                    </div>
+                    <div class="flex justify-between py-2">
+                        <span class="text-gray-400">Total Borrowed:</span>
+                        <span class="text-red-400 font-semibold">₹${data.totalBorrowed || 0}</span>
+                    </div>
+                `;
+            }
+        }
+        
+        async function searchUsers() {
+            const query = document.getElementById('searchQuery').value;
+            const data = await apiCall(`/user/search?search=${query}`);
+            const resultsDiv = document.getElementById('searchResults');
+            if (data && Array.isArray(data)) {
+                resultsDiv.innerHTML = data.map(user => `
+                    <div class="bg-dark-bg border border-dark-border rounded-lg p-3 flex items-center justify-between hover:bg-dark-hover transition">
+                        <div>
+                            <div class="font-medium text-gray-200">${user.name}</div>
+                            <div class="text-xs text-gray-400">${user.email}</div>
+                        </div>
+                        <button onclick="sendFriendRequestTo('${user._id}')" 
+                            class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition text-xs font-medium">
+                            Add Friend
+                        </button>
+                    </div>
+                `).join('');
+            } else {
+                resultsDiv.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">No users found</p>';
+            }
+        }
+        
+        // Friend Functions
+        async function sendFriendRequestTo(receiverId) {
+            const data = await apiCall('/friend/request', 'POST', { receiverId });
+            if (data) {
+                showToast('Friend request sent!', 'success');
+                loadOutgoingRequests();
+            }
+        }
+        
+        async function loadFriends() {
+            const data = await apiCall('/friend/list');
+            const friendsDiv = document.getElementById('friendsList');
+            if (data && Array.isArray(data)) {
+                friendsDiv.innerHTML = data.map(friend => {
+                    // Calculate net balance (positive = they owe you, negative = you owe them)
+                    const netBalance = (friend.totalLent || 0) - (friend.totalBorrowed || 0);
+                    const balanceText = netBalance > 0 
+                        ? `They owe you ₹${netBalance}` 
+                        : netBalance < 0 
+                        ? `You owe them ₹${Math.abs(netBalance)}` 
+                        : 'Settled';
+                    const balanceColor = netBalance > 0 ? 'text-green-400' : netBalance < 0 ? 'text-red-400' : 'text-gray-400';
+                    
+                    return `
+                        <div class="bg-dark-bg border border-dark-border rounded-lg p-4 hover:bg-dark-hover transition">
+                            <div class="mb-3">
+                                <div class="font-medium text-gray-200">${friend.name}</div>
+                                <div class="text-xs text-gray-400 mb-2">${friend.email}</div>
+                                <div class="text-sm font-semibold ${balanceColor}">${balanceText}</div>
+                            </div>
+                            <div class="flex gap-2 flex-wrap">
+                                <button onclick="showTransactionForm('${friend._id}', '${friend.name}')" 
+                                    class="flex-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition text-xs font-medium">
+                                    New Transaction
+                                </button>
+                                ${netBalance !== 0 ? `
+                                    <button onclick="showSettlementOptions('${friend._id}', '${friend.name}', ${Math.abs(netBalance)}, ${netBalance < 0}, '${friend.phone || ''}')" 
+                                        class="flex-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg transition text-xs font-medium">
+                                        Settle Up
+                                    </button>
+                                ` : ''}
+                                <button onclick="removeFriendById('${friend._id}')" 
+                                    class="px-3 py-1.5 bg-red-600/10 hover:bg-red-600/20 text-red-400 rounded-lg transition text-xs font-medium">
+                                    Remove
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                friendsDiv.innerHTML = '<p class="text-gray-400 text-sm text-center py-4 col-span-full">No friends yet</p>';
+            }
+        }
+        
+        async function loadIncomingRequests() {
+            const data = await apiCall('/friend/requests/incoming');
+            const div = document.getElementById('incomingRequests');
+            if (data && Array.isArray(data)) {
+                div.innerHTML = data.map(req => `
+                    <div class="bg-dark-bg border border-dark-border rounded-lg p-3 hover:bg-dark-hover transition">
+                        <div class="mb-2">
+                            <div class="font-medium text-gray-200">${req.sender?.name || 'Unknown'}</div>
+                            <div class="text-xs text-gray-400">${req.sender?.email || 'N/A'}</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="handleRequest('${req._id}', 'accept')" 
+                                class="flex-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg transition text-xs font-medium">
+                                Accept
+                            </button>
+                            <button onclick="handleRequest('${req._id}', 'reject')" 
+                                class="flex-1 px-3 py-1.5 bg-red-600/10 hover:bg-red-600/20 text-red-400 rounded-lg transition text-xs font-medium">
+                                Reject
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                div.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">No incoming requests</p>';
+            }
+        }
+        
+        async function loadOutgoingRequests() {
+            const data = await apiCall('/friend/requests/outgoing');
+            const div = document.getElementById('outgoingRequests');
+            if (data && Array.isArray(data)) {
+                div.innerHTML = data.map(req => `
+                    <div class="bg-dark-bg border border-dark-border rounded-lg p-3 flex items-center justify-between hover:bg-dark-hover transition">
+                        <div>
+                            <div class="font-medium text-gray-200">${req.receiver?.name || 'Unknown'}</div>
+                            <div class="text-xs text-gray-400">${req.receiver?.email || 'N/A'}</div>
+                        </div>
+                        <button onclick="cancelRequestById('${req._id}')" 
+                            class="px-3 py-1.5 bg-red-600/10 hover:bg-red-600/20 text-red-400 rounded-lg transition text-xs font-medium">
+                            Cancel
+                        </button>
+                    </div>
+                `).join('');
+            } else {
+                div.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">No outgoing requests</p>';
+            }
+        }
+        
+        async function handleRequest(requestId, decision) {
+            const data = await apiCall(`/friend/request/${requestId}/handle`, 'POST', { decision });
+            if (data) {
+                loadIncomingRequests();
+                if (decision === 'accept') loadFriends();
+            }
+        }
+        
+        async function cancelRequestById(requestId) {
+            const data = await apiCall(`/friend/request/${requestId}`, 'DELETE');
+            if (data) loadOutgoingRequests();
+        }
+        
+        async function removeFriendById(friendId) {
+            showConfirmModal('Are you sure you want to remove this friend?', async () => {
+                const data = await apiCall(`/friend/${friendId}`, 'DELETE');
+                if (data) {
+                    showToast('Friend removed successfully', 'success');
+                    loadFriends();
+                }
+            });
+        }
+        
+        // Transaction Functions
+        function showTransactionForm(friendId, friendName) {
+            const content = `
+                <div class="bg-dark-card border border-dark-border rounded-xl p-6 max-w-md w-full animate-slide-up">
+                    <h3 class="text-xl font-semibold mb-4">New Transaction with ${friendName}</h3>
+                    <div class="space-y-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Amount (₹)</label>
+                            <input type="number" id="txAmount" placeholder="Enter amount" 
+                                class="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-2 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Description</label>
+                            <input type="text" id="txDescription" placeholder="What's this for?" 
+                                class="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-2 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Transaction Type</label>
+                            <div class="flex gap-2">
+                                <button id="txTypeLent" onclick="selectTxType('lent')" 
+                                    class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg transition font-medium">
+                                    I Lent
+                                </button>
+                                <button id="txTypeBorrowed" onclick="selectTxType('borrowed')" 
+                                    class="flex-1 px-4 py-2 bg-dark-hover text-gray-300 rounded-lg transition font-medium">
+                                    I Borrowed
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="closeModal()" 
+                            class="flex-1 px-4 py-2 bg-dark-hover hover:bg-dark-border text-gray-300 rounded-lg transition font-medium">
+                            Cancel
+                        </button>
+                        <button onclick="submitTransaction('${friendId}')" 
+                            class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-medium">
+                            Create Transaction
+                        </button>
+                    </div>
+                </div>
+            `;
+            showModal(content);
+            window.selectedTxType = 'lent';
+        }
+        
+        function selectTxType(type) {
+            window.selectedTxType = type;
+            const lentBtn = document.getElementById('txTypeLent');
+            const borrowedBtn = document.getElementById('txTypeBorrowed');
+            
+            if (type === 'lent') {
+                lentBtn.className = 'flex-1 px-4 py-2 bg-green-600 text-white rounded-lg transition font-medium';
+                borrowedBtn.className = 'flex-1 px-4 py-2 bg-dark-hover text-gray-300 rounded-lg transition font-medium';
+            } else {
+                borrowedBtn.className = 'flex-1 px-4 py-2 bg-red-600 text-white rounded-lg transition font-medium';
+                lentBtn.className = 'flex-1 px-4 py-2 bg-dark-hover text-gray-300 rounded-lg transition font-medium';
+            }
+        }
+        
+        function submitTransaction(friendId) {
+            const amount = document.getElementById('txAmount').value;
+            const description = document.getElementById('txDescription').value;
+            
+            if (!amount || parseFloat(amount) <= 0) {
+                showToast('Please enter a valid amount', 'error');
+                return;
+            }
+            
+            closeModal();
+            createTransaction(friendId, parseFloat(amount), description || '', window.selectedTxType);
+        }
+        
+        async function createTransaction(receiverId, amount, description, type) {
+            const data = await apiCall('/transactions', 'POST', {
+                receiverId,
+                amount,
+                type,
+                remarks: description
+            });
+            if (data) {
+                showToast('Transaction created! Waiting for the other party to accept.', 'success');
+                loadTransactions();
+                loadPendingTransactions();
+                loadProfile();
+            }
+        }
+        
+        async function loadPendingTransactions() {
+            const data = await apiCall('/transactions/pending');
+            const div = document.getElementById('pendingTransactionsList');
+            if (data && data.transactions && data.transactions.length > 0) {
+                div.innerHTML = data.transactions.map(tx => {
+                    // Determine who initiated and what action is needed
+                    const otherUser = tx.senderName;
+                    const actionType = tx.type === 'lent' ? 'lent you' : 'borrowed from you';
+                    const amountColor = tx.type === 'borrowed' ? 'text-green-400' : 'text-red-400';
+                    
+                    return `
+                        <div class="bg-dark-bg border border-yellow-500/30 rounded-lg p-4 hover:bg-dark-hover transition">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <div class="text-sm text-gray-400">${otherUser} ${actionType}</div>
+                                    <div class="${amountColor} font-bold text-lg">₹${tx.amount}</div>
+                                </div>
+                                <span class="px-2 py-1 bg-yellow-500/10 text-yellow-400 rounded text-xs font-medium">Needs Acceptance</span>
+                            </div>
+                            <div class="text-xs text-gray-400 mb-3">${tx.remarks || 'No description'}</div>
+                            <div class="flex gap-2">
+                                <button onclick="acceptTransaction('${tx._id}')" 
+                                    class="flex-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg transition text-xs font-medium">
+                                    Accept
+                                </button>
+                                <button onclick="rejectTransaction('${tx._id}')" 
+                                    class="flex-1 px-3 py-1.5 bg-red-600/10 hover:bg-red-600/20 text-red-400 rounded-lg transition text-xs font-medium">
+                                    Reject
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                div.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">No pending transactions</p>';
+            }
+        }
+        
+        async function acceptTransaction(transactionId) {
+            const result = await apiCall(`/transactions/${transactionId}/accept`, 'PATCH');
+            if (result) {
+                showToast('Transaction accepted!', 'success');
+                loadTransactions();
+                loadPendingTransactions();
+                loadProfile();
+                loadFriends();
+            }
+        }
+        
+        async function rejectTransaction(transactionId) {
+            const result = await apiCall(`/transactions/${transactionId}/reject`, 'PATCH');
+            if (result) {
+                showToast('Transaction rejected!', 'info');
+                loadPendingTransactions();
+            }
+        }
+        
+        function showSettlementOptions(friendId, friendName, amount, youOwe, friendPhone) {
+            if (youOwe) {
+                // Show options: Mark as Paid or Pay via UPI
+                const content = `
+                    <div class="bg-dark-card border border-dark-border rounded-xl p-6 max-w-md w-full animate-slide-up">
+                        <h3 class="text-xl font-semibold mb-4">Settle Payment</h3>
+                        <p class="text-gray-300 mb-6">You owe ${friendName} <span class="text-red-400 font-bold">₹${amount}</span>. How would you like to settle?</p>
+                        <div class="space-y-3">
+                            <button onclick="closeModal(); showUPIPayment('${friendId}', '${friendName}', ${amount}, '${friendPhone}')" 
+                                class="w-full px-4 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg transition font-medium">
+                                Pay via UPI
+                            </button>
+                            <button onclick="closeModal(); settleWithFriend('${friendId}', ${amount})" 
+                                class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-medium">
+                                Mark as Paid Manually
+                            </button>
+                            <button onclick="closeModal()" 
+                                class="w-full px-4 py-3 bg-dark-hover hover:bg-dark-border text-gray-300 rounded-lg transition font-medium">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                `;
+                showModal(content);
+            } else {
+                // They owe you - just mark as settled
+                showConfirmModal(`${friendName} owes you <span class="text-green-400 font-bold">₹${amount}</span>. Mark as settled?`, () => {
+                    settleWithFriend(friendId, amount);
+                });
+            }
+        }
+        
+        async function settleWithFriend(friendId, amount) {
+            const result = await apiCall(`/transactions/settle/${friendId}`, 'POST', { amount });
+            if (result) {
+                showToast('Settlement recorded!', 'success');
+                loadFriends();
+                loadTransactions();
+                loadProfile();
+            }
+        }
+        
+        function showUPIPayment(friendId, friendName, amount, friendPhone) {
+            // Check if friend has a phone number registered
+            if (!friendPhone) {
+                showToast(`${friendName} has not registered a phone number. Please ask them to update their profile.`, 'warning');
+                return;
+            }
+            
+            const upiNumber = friendPhone;
+            
+            // Generate UPI payment URL using phone number@upi format
+            const upiId = `${upiNumber}@upi`;
+            const upiUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(friendName)}&am=${amount}&cu=INR&tn=${encodeURIComponent('Settlement via Peerpay Ledger')}`;
+            
+            // Create a temporary modal
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-dark-card border border-dark-border rounded-xl p-6 max-w-md w-full mx-4">
+                    <h3 class="text-xl font-semibold mb-4">Pay via UPI</h3>
+                    <div class="space-y-4">
+                        <div class="bg-dark-bg border border-dark-border rounded-lg p-4">
+                            <div class="text-sm text-gray-400 mb-2">Pay to:</div>
+                            <div class="font-medium text-gray-200">${friendName}</div>
+                            <div class="text-xs text-gray-400">UPI: ${upiNumber}</div>
+                        </div>
+                        <div class="bg-dark-bg border border-dark-border rounded-lg p-4">
+                            <div class="text-sm text-gray-400 mb-2">Amount:</div>
+                            <div class="text-2xl font-bold text-green-400">₹${amount}</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <a href="${upiUrl}" 
+                                class="flex-1 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition text-center font-medium"
+                                onclick="closeUPIModal(); settleWithFriend('${friendId}', ${amount});">
+                                Open UPI App
+                            </a>
+                            <button onclick="closeUPIModal()" 
+                                class="px-4 py-3 bg-red-600/10 hover:bg-red-600/20 text-red-400 rounded-lg transition font-medium">
+                                Cancel
+                            </button>
+                        </div>
+                        <div class="text-xs text-gray-400 text-center">
+                            After payment, the settlement will be recorded automatically.
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            window.currentUPIModal = modal;
+        }
+        
+        function closeUPIModal() {
+            if (window.currentUPIModal) {
+                document.body.removeChild(window.currentUPIModal);
+                window.currentUPIModal = null;
+            }
+        }
+        
+        async function loadTransactions() {
+            const data = await apiCall('/transactions');
+            const div = document.getElementById('transactionsList');
+            if (data && data.transactions) {
+                console.log('Transactions data:', data.transactions); // Debug log
+                div.innerHTML = data.transactions.map(tx => {
+                    // Backend now returns type from current user's perspective
+                    const otherUser = tx.type === 'lent' ? tx.receiverName : tx.senderName;
+                    const label = tx.type === 'lent' ? 'Lent to' : 'Borrowed from';
+                    const amountColor = tx.type === 'lent' ? 'text-green-400' : 'text-red-400';
+                    
+                    // Status badge
+                    let statusBadge = '';
+                    if (tx.status === 'completed') {
+                        statusBadge = '<span class="px-2 py-1 bg-green-500/10 text-green-400 rounded text-xs font-medium">Completed</span>';
+                    } else if (tx.status === 'failed') {
+                        statusBadge = '<span class="px-2 py-1 bg-red-500/10 text-red-400 rounded text-xs font-medium">Failed</span>';
+                    } else if (tx.status === 'accepted') {
+                        statusBadge = '<span class="px-2 py-1 bg-blue-500/10 text-blue-400 rounded text-xs font-medium">Accepted</span>';
+                    } else {
+                        statusBadge = '<span class="px-2 py-1 bg-yellow-500/10 text-yellow-400 rounded text-xs font-medium">Pending</span>';
+                    }
+                    
+                    // Add action buttons for accepted transactions
+                    let actionButtons = '';
+                    if (tx.status === 'accepted') {
+                        // If user lent money, they can mark as completed or failed
+                        if (tx.type === 'lent') {
+                            actionButtons = `
+                                <div class="flex gap-2 mt-3">
+                                    <button onclick="updateTransactionStatus('${tx._id}', 'completed')" 
+                                        class="flex-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg transition text-xs font-medium">
+                                        Mark as Paid
+                                    </button>
+                                    <button onclick="updateTransactionStatus('${tx._id}', 'failed')" 
+                                        class="flex-1 px-3 py-1.5 bg-red-600/10 hover:bg-red-600/20 text-red-400 rounded-lg transition text-xs font-medium">
+                                        Mark as Failed
+                                    </button>
+                                </div>
+                            `;
+                        } 
+                        // If user borrowed money, they can mark as completed
+                        else {
+                            actionButtons = `
+                                <div class="mt-3">
+                                    <button onclick="updateTransactionStatus('${tx._id}', 'completed')" 
+                                        class="w-full px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg transition text-xs font-medium">
+                                        Confirm Payment
+                                    </button>
+                                </div>
+                            `;
+                        }
+                    }
+                    
+                    return `
+                        <div class="bg-dark-bg border border-dark-border rounded-lg p-4 hover:bg-dark-hover transition">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <div class="text-sm text-gray-400">${label}</div>
+                                    <div class="font-medium text-gray-200">${otherUser || 'Unknown'}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="${amountColor} font-bold text-lg">₹${tx.amount}</div>
+                                    ${statusBadge}
+                                </div>
+                            </div>
+                            <div class="text-xs text-gray-400 mb-1">${tx.remarks || 'No description'}</div>
+                            <div class="text-xs text-gray-500">${new Date(tx.createdAt).toLocaleDateString()}</div>
+                            ${actionButtons}
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                div.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">No transactions</p>';
+            }
+        }
+        
+        async function updateTransactionStatus(transactionId, status) {
+            const result = await apiCall(`/transactions/${transactionId}/status`, 'PATCH', { status });
+            if (result) {
+                showToast(`Transaction ${status}!`, 'success');
+                loadTransactions();
+                loadProfile();
+            }
+        }
+        
+        // Notification Functions
+        async function loadNotifications() {
+            const data = await apiCall('/notifications');
+            const div = document.getElementById('notificationsList');
+            if (data && Array.isArray(data)) {
+                div.innerHTML = data.map(notif => `
+                    <div class="bg-dark-bg border border-dark-border rounded-lg p-3 hover:bg-dark-hover transition ${notif.isRead ? 'opacity-50' : ''}">
+                        <div class="flex items-start justify-between mb-1">
+                            <span class="text-xs font-medium text-blue-400 uppercase">${notif.type}</span>
+                            ${!notif.isRead ? '<span class="w-2 h-2 bg-blue-500 rounded-full"></span>' : ''}
+                        </div>
+                        <div class="text-sm text-gray-200 mb-1">${notif.message}</div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-gray-500">${new Date(notif.createdAt).toLocaleString()}</span>
+                            ${!notif.isRead ? `<button onclick="markNotificationAsRead('${notif._id}')" 
+                                class="px-2 py-1 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 rounded text-xs font-medium transition">
+                                Mark Read
+                            </button>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                div.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">No notifications</p>';
+            }
+            loadUnreadCount();
+        }
+        
+        async function loadUnreadCount() {
+            const data = await apiCall('/notifications/unread/count');
+            if (data) {
+                document.getElementById('unreadCount').textContent = data.count || 0;
+            }
+        }
+        
+        async function markNotificationAsRead(notifId) {
+            await apiCall(`/notifications/${notifId}/read`, 'PATCH');
+            loadNotifications();
+        }
+        
+        async function markAllAsRead() {
+            await apiCall('/notifications/read-all', 'PATCH');
+            loadNotifications();
+        }
+        
+        // WebSocket Functions
+        function connectWebSocket() {
+            if (!token) {
+                showToast('Please sign in first', 'warning');
+                return;
+            }
+            
+            // Main WebSocket
+            socket = io(API_BASE, {
+                auth: { token }
+            });
+            
+            socket.on('connect', () => {
+                updateWsStatus('Connected');
+                logWsEvent('connect', { socketId: socket.id });
+            });
+            
+            socket.on('disconnect', () => {
+                updateWsStatus('Disconnected');
+                logWsEvent('disconnect', {});
+            });
+            
+            socket.on('friend.requested', (data) => {
+                logWsEvent('friend.requested', data);
+                loadIncomingRequests();
+            });
+            socket.on('friend.accepted', (data) => {
+                logWsEvent('friend.accepted', data);
+                loadFriends();
+            });
+            socket.on('friend.rejected', (data) => {
+                logWsEvent('friend.rejected', data);
+                loadOutgoingRequests();
+            });
+            socket.on('friend.removed', (data) => {
+                logWsEvent('friend.removed', data);
+                loadFriends();
+            });
+            socket.on('friend.requestCancelled', (data) => {
+                logWsEvent('friend.requestCancelled', data);
+                loadIncomingRequests();
+            });
+            socket.on('friends.onlineList', (data) => logWsEvent('friends.onlineList', data));
+            socket.on('user.online', (data) => logWsEvent('user.online', data));
+            socket.on('user.offline', (data) => logWsEvent('user.offline', data));
+            
+            // Transaction events
+            socket.on('transaction.created', (data) => {
+                logWsEvent('transaction.created', data);
+                loadTransactions();
+                loadPendingTransactions();
+                loadProfile();
+            });
+            socket.on('transaction.updated', (data) => {
+                logWsEvent('transaction.updated', data);
+                loadTransactions();
+                loadPendingTransactions();
+                loadProfile();
+                loadFriends();
+            });
+            socket.on('transaction.accepted', (data) => {
+                logWsEvent('transaction.accepted', data);
+                loadTransactions();
+                loadPendingTransactions();
+                loadProfile();
+                loadFriends();
+            });
+            socket.on('transaction.rejected', (data) => {
+                logWsEvent('transaction.rejected', data);
+                loadPendingTransactions();
+            });
+            
+            // Notification events on same connection
+            socket.on('notification.new', (data) => {
+                logWsEvent('notification.new', data);
+                loadNotifications();
+            });
+            socket.on('notification.unreadCount', (data) => {
+                logWsEvent('notification.unreadCount', data);
+                if (data.count !== undefined) {
+                    document.getElementById('unreadCount').textContent = data.count;
+                }
+            });
+        }
+        
+        function disconnectWebSocket() {
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+            }
+            updateWsStatus('Disconnected');
+        }
+        
+        function getOnlineFriends() {
+            if (!socket) {
+                showToast('Connect WebSocket first', 'warning');
+                return;
+            }
+            socket.emit('friends.getOnline');
+        }
+        
+        // Initialize
+        if (token) {
+            showUserPage();
+        } else {
+            showAuthPage();
+        }
+    </script>
+</body>
+</html>
